@@ -1,0 +1,485 @@
+INTERLIS 2.4;
+
+MODEL SIA405_LKMap_d_2025_draft (de) AT "https://405.sia.ch/models/"
+  VERSION "0.7.2" =
+
+  IMPORTS UNQUALIFIED INTERLIS;
+  IMPORTS Units;
+  IMPORTS GeometryCHLV95_V2;
+  IMPORTS SIA405_Base_d_2025_draft;
+
+  TOPIC SIA405_LKMap EXTENDS SIA405_Base_d_2025_draft.SIA405_BaseTopic =
+    DEPENDS ON SIA405_Base_d_2025_draft.Administration;
+
+    /** Ein Abstichpunkt liefert zusätzliche Höheninformationen zu einem LKObjekt an bestehender Lage.
+     */
+    CLASS Abstichpunkt =
+      /** Art des Abstichpunktes, der zu einem LKObjekt gehört.
+       */
+      Art: MANDATORY (
+        /** Der Abstichpunkt beschreibt eine Ersatzkote, wenn andere Höheninformationen fehlen. Dies kann z. B. die Terrainhöhe oder eine darauf basierende Normtiefe sein.
+         */
+        KoteErsatz,
+        /** Der Abstichpunkt beschreibt einen Punkt der Referenzebene gemäss Wegleitung.
+         */
+        KoteRef,
+        /** Der Abstichpunkt beschreibt einen Punkt des Objektes gemäss Wegleitung.
+         */
+        KoteZ
+      );
+      /** 3D-Koordinate des Abstichpunktes.
+       */
+      Position: MANDATORY GeometryCHLV95_V2.Coord3;
+    END Abstichpunkt;
+
+    /** Weitere Attribute zum LKObjekt gemäss bilateralen Vereinbarungen und medienspezifisch, die über die Darstellung der belegten Fläche hinausgehen.
+     */
+    STRUCTURE Eigenschaften =
+      /** Bezeichnung des weiteren Attributs zum LKObjekt (Attributname).
+       */
+      Bezeichnung: MANDATORY TEXT*80;
+      /** Wert des weiteren Attributs zum LKObjekt als Text.
+       */
+      Wert: MANDATORY TEXT*80;
+    END Eigenschaften;
+
+    CLASS LKObjekt (ABSTRACT) EXTENDS SIA405_BaseClass =
+      /** Weitere Attribute zum LKObjekt gemäss bilateralen Vereinbarungen und medienspezifisch, die über die Darstellung der belegten Fläche hinausgehen.
+       */
+      Eigenschaft: BAG OF Eigenschaften;
+      Lagebestimmung: MANDATORY SIA405_Base_d_2025_draft.Bestimmungswert;
+      /** Hoehenbestimmung des gesamten Objekt, d.h. die schlechteste Höhengenauigkeit eines Abstichpunkts bestimmt die Hoehenbestimmung.
+       */
+      Hoehenbestimmung: SIA405_Base_d_2025_draft.Bestimmungswert;
+      /** Betriebs- und Planungszustand. 
+       */
+      Status: SIA405_Base_d_2025_draft.Status;
+    END LKObjekt;
+
+    CLASS LKFlaeche EXTENDS LKObjekt =
+      /** geschlossener Linienzug, Stützpunkte in 2D-Landeskoordinaten, 3 Dezimalstellen
+       */
+      Flaeche: MANDATORY GeometryCHLV95_V2.Surface;
+      Objektart: MANDATORY (
+        Abwasser (
+          Einleitstelle,
+          Normschacht (
+            Abscheider,
+            Einlaufschacht,
+            Geleiseschacht,
+            Kombischacht,
+            /** früherer Wert Kontrollschacht.
+            */
+            Kontroll_Einsteigschacht,
+            Schlammsammler,
+            /** für alle anderen Werte.
+             */
+            weitere
+          ),
+          Spezialbauwerk (
+            Abscheider,
+            Pumpwerk,
+            Regenbecken,
+            /** alle anderen Werte.
+             */
+            weitere
+          ),
+          unbekannt,
+          Versickerungsanlage
+        ),
+        Elektrizitaet (
+          /** flächenhafte Spezialschächte (Kabine, Oeffentlicher_Verbraucher, Schacht, Station mit Geometrie), sonst als LKPunkt abbilden.
+           */ 
+          Spezialbauwerk (
+            /** falls zusätzlich Fläche erfasst, auch als LKFlaeche exportieren.
+             */
+            Kabine,
+            /** falls zusätzlich Fläche erfasst, auch als LKFlaeche exportieren.
+             */
+            Schacht,
+            /** falls zusätzlich Fläche erfasst, auch als LKFlaeche exportieren.
+             */
+            Station,
+            /** falls zusätzlich Fläche erfasst, auch als LKFlaeche exportieren.
+             */
+            OeffentlicherVerbraucher
+          ),
+          /** Tragwerke werden in der Regel als Symbol dargestellt. Bei Tragwerken mit grosser Fläche (z.B. Gittermast) kann optional auch die Fläche dargestellt werden.
+           */
+          Tragwerk,
+          /** Flächen von Trasse sollen grundsätzlich als LKLinie mit Breite (<= 4000 mm) angegeben werden. Es gibt aber Flächen, die man nicht so abbilden kann (komplizierte Formen die auch den belegten Raum abbilden). Diese werden als LKFlaeche übergeben.
+           */
+          Trasse,
+          unbekannt
+        ),
+        Fernwaerme (
+          /** flächenhafte Bauwerke mit Geometrie.
+           */
+          Bauwerk (
+            /** Entleeerungskammer, Entlueftungskammer, Hauptkammer, Kompensatorenkammer, Kontrollkammer, Messkammer, Steuerkammer
+            */
+            Kammer,
+            Spezialbauwerk,
+            /** Druckreduzierstation, Umformerstation
+             */
+            Station
+          ),
+          /** Flächen von Trasse sollen grundsätzlich als LKLinie mit Breite (<= 4000 mm) angegeben werden. Es gibt aber Flächen, die man nicht so abbilden kann (komplizierte Formen die auch den belegten Raum abbilden). Diese werden als LKFlaeche übergeben.
+           */
+          Trasse,
+          unbekannt
+        ),
+        Gas (
+          /** alle Subwerte von Spezialbauwerk.Art
+           */
+          Spezialbauwerk,
+          unbekannt 
+        ),
+        Kommunikation (
+          /** flächenhafte Objekte (Kabine, Konsole, TechnikCenter mit Geometrie), sonst als LKPunkt abbilden.
+           */
+          Bauwerk,
+          /** zusätzliche Fläche bei Knotentyp Schacht.
+           */
+          Schacht,
+          /** Tragwerke werden in der Regel als Symbol dargestellt. Bei Tragwerken mit grosser Fläche (z.B. Gittermast kann optional auch die Fläche dargestellt werden.
+           */
+          Tragwerk,
+          /** Flächen von Trasse sollen grundsätzlich als LKLinie mit Breite (<= 4000 mm) angegeben werden. Es gibt aber Flächen, die man nicht so abbilden kann (komplizierte Formen die auch den belegten Raum abbilden). Diese werden als LKFlaeche übergeben.
+           */
+          Trasse,
+          unbekannt
+        ),
+        Wasser (
+          /** alle Subwerte von Spezialbauwerk.Art
+           */
+          Spezialbauwerk,
+          unbekannt
+        ),
+        weitereMedien (
+          kathodischerKorrosionsschutz,
+          /** weitere in LKMap bisher nicht abgebildete Medien.
+           */
+          weitere
+        ),
+        Medien_uebergreifend (
+          /** Die Rohrleitungsverordnung (RLV) schreibt vor, dass alle Bauvorhaben innerhalb eines waagrecht gemessenen Abstandes von 10 m von der Rohrleitung bewilligungspflichtig sind. Diese Information wird aus den Basisdaten der amtlichen Vermessung (TOPIC Rohrleitungen, Werkleitungsmedium Gas) generiert (eigener Datenlieferant).
+           */
+          Sicherheitskorridor,
+          /** z.B. Dücker, Kulisse, Leitungskanal, Stollen, uebrige die nicht einem Werkleitungsmedium zugeordnet werden können.
+           */
+          Spezialbauwerk,
+          /** aus dem LK entlassenes Gebiet.
+           */
+          Perimeter_entlassenes_Gebiet,
+          weitere
+        )
+      );
+    END LKFlaeche;
+
+    ASSOCIATION Abstichpunkt_LKFlaecheAssoc =
+      LKFlaecheRef -<#> {1} LKFlaeche;
+      Abstichpunkt_LKFlaecheAssocRef -- {0 .. *} Abstichpunkt;
+    END Abstichpunkt_LKFlaecheAssoc;
+
+    CLASS LKLinie EXTENDS LKObjekt =
+      /** Breite eines Objektes [mm], Doppellinie >= 300 mm (Massstab 1:200) bzw. >= 600 mm (Mst. 1:500) für alle Medien.
+       */
+      Breite: SIA405_Base_d_2025_draft.Breite;
+      /** falls Breite nicht vorhanden, abfüllen der angenommenen Breite des Objektes [mm]. Der Standardwert ist 250 [mm]. (neu Release 2025)
+       */
+      Breite_Annahme: SIA405_Base_d_2025_draft.Breite;
+      /** offener Linienzug, Stützpunkte in 2D-Landeskoordinaten, 2 Dezimalstellen
+       */
+      Linie: MANDATORY GeometryCHLV95_V2.Line;
+      /** Es werden alle Objekte aufgelistet, die gemäss WI Modell dargestellt werden. Typ / Funktion / Art werden direkt übernommen und nicht zusammengefasst unter anderen Namen.
+       */
+      Objektart: MANDATORY (
+        Abwasser (
+          /** Steuer- und Signalkabel
+           */
+          Fernwirkkabel,
+          /** Pro Haltung wird ein Objekt erzeugt. Falls mehrere Haltungen pro Kanal vorhanden sind, gibt es auch mehrere Linienobjekte, da z.B. Lichte_Hoehe oder Gefälle ändern kann.
+           */
+          Haltung_Kanal,
+          Schutzrohr
+        ),
+        Elektrizitaet (
+          AnkerStrebe,
+          Trasse (
+            oberirdisch,
+            unterirdisch
+          )
+        ),
+        Fernwaerme (
+          /** Steuer- und Signalkabel
+           */
+          Fernwirkkabel,
+          Trasse (
+            /** Trassetyp = Freileitung
+             */
+            oberirdisch,
+            /** Matching alle anderen Werte von Trassetyp inkl. unbekannt
+             */
+            unterirdisch
+          ),
+          Schutzrohr
+        ),
+        Gas (
+          /** Steuer- und Signalkabel
+           */
+          Fernwirkkabel,
+          Leitung,
+          Schutzrohr
+        ),
+        Kommunikation (
+          Trasse (
+            oberirdisch,
+            unterirdisch
+          )
+        ),
+        Wasser (
+          /** Steuer- und Signalkabel
+           */
+          Fernwirkkabel,
+          Leitung,
+          Schutzrohr
+        ),
+        weitereMedien (
+          Fernwirkkabel,
+          kathodischerKorrosionsschutz,
+          Leitung,
+          Schutzrohr
+        )
+      );
+      /** Zuordnung Werte Profiltyp siehe jeweiliges Werkleitungsmedium.
+       */
+      Profiltyp: (
+        Eiprofil,
+        Kreisprofil,
+        Rechteckprofil,
+        unbekannt,
+      /** andere, Maulprofil, offenes_Profil, Spezialprofil. In 3D Darstellung als genähertes Rechteck.
+       */
+      weitere
+      );
+    END LKLinie;
+
+    ASSOCIATION Abstichpunkt_LKLinieAssoc =
+      LKLinieRef -<#> {1} LKLinie;
+      Abstichpunkt_LKLinieAssocRef -- {0 .. *} Abstichpunkt;
+    END Abstichpunkt_LKLinieAssoc;
+
+    CLASS LKPunkt EXTENDS LKObjekt =
+      /** grösseres (Innen-)Mass eines Objektes (z. B. Länge/Durchmesser).
+       */
+      Dimension1: SIA405_Base_d_2025_draft.Abmessung;
+      /** kleineres (Innen-)Mass eines Objektes (z. B. Breite/Durchmesser).
+       */
+      Dimension2: SIA405_Base_d_2025_draft.Abmessung;
+      /** falls Dimension1 nicht vorhanden ist, abfüllen in Abhängigkeit von Objektart. Der Standardwert ist 500 [mm]. (neu Release 2025)
+       */
+      Dimension_Annahme: SIA405_Base_d_2025_draft.Abmessung;
+      /** Es werden alle Objekte aufgelistet, die gemäss WI Modell dargestellt werden. Typ / Funktion / Art werden direkt übernommen und nicht zusammengefasst unter anderen Namen.
+       */
+      Objektart: MANDATORY (
+        Abwasser (
+          /** nur bei Spezialbauwerken separat dargestellt.
+           */
+          Deckel,
+          Einleitstelle,
+          Kabelpunkt (
+            Kabelschacht,
+            Kabine
+          ),
+          /** Funktion im Werkleitungsmedium Abwasser. Orientierung notwendig (senkrecht zum Kanal / Haltung).
+           */
+          Kaliberwechsel,
+          /** Funktion im Werkleitungsmedium Abwasser. Orientierung notwendig (senkrecht zur Haltung).
+           */
+          Kanalanfang,
+          Normschacht (
+            Abscheider,
+            Einlaufschacht,
+            Geleiseschacht,
+            Kombischacht,
+            /** früherer Wert Kontrollschacht
+            */
+            Kontroll_Einsteigschacht,
+            Schlammsammler,
+            /** für alle anderen Werte
+             */
+            weitere
+          ),
+          unbekannt,
+          Versickerungsanlage
+        ),
+        Elektrizitaet (
+          Kabine,
+          OeffentlicherVerbraucher,
+          Schacht (
+            rechteckig,
+            rund
+          ),
+          Station,
+          Tragwerk,
+          unbekannt
+        ),
+        Fernwaerme (
+          Kabelpunkt (
+            Kabelschacht,
+            Kabine
+          ),
+          Trassepunkt (
+            Abstuetzung,
+            Ent_Belueftung,
+            Entwaesserung,
+            Fixpunkt,
+            Geometriepunkt,
+            Montageoeffnung_Schachteinstieg
+            ),
+          unbekannt 
+        ),
+        Gas (
+          /** Alle Subwerte von Absperrorgan.Art: unbekannt, Schieber, Klappe
+           */
+          Absperrorgan,
+          Gaslaterne,
+          Kabelpunkt (
+            Kabelschacht,
+            Kabine
+          ),
+          Rohrleitungsteil (
+            Bogen_horizontal,
+            Bogen_vertikal
+          ),
+          Schacht,
+          Siphon,
+          unbekannt
+        ),
+        Kommunikation (
+          Bauwerk,
+          Schacht (
+            rechteckig,
+            rund
+          ),
+          Tragwerk,
+          unbekannt
+        ),
+        Wasser (
+          /** Subwerte von Absperrorgan.Art: unbekannt, Schieber, Klappe
+           */
+          Absperrorgan,
+          Gartenhydrant,
+          Kabelpunkt (
+            Kabelschacht,
+            Kabine
+          ),
+          Oberflurhydrant,
+          Rohrleitungsteil (
+            Bogen_horizontal,
+            Bogen_vertikal
+          ),
+          Schacht,
+          unbekannt,
+          Unterflurhydrant
+        ),
+        weitereMedien (
+          Kabelpunkt (
+            Kabelschacht,
+            Kabine
+          ),
+          kathodischerKorrosionsschutz,
+          Leitungspunkt
+        )
+      );
+      SymbolPos: MANDATORY GeometryCHLV95_V2.Coord2;
+      SymbolOri: GeometryCHLV95_V2.Orientation;
+    END LKPunkt;
+
+    ASSOCIATION Abstichpunkt_LKPunktAssoc =
+      LKPunktRef -<#> {1} LKPunkt;
+      Abstichpunkt_LKPunktAssoc -- {0 .. *} Abstichpunkt;
+    END Abstichpunkt_LKPunktAssoc;
+
+    CLASS LKObjekt_Text EXTENDS SIA405_Base_d_2025_draft.SIA405_TextPos =
+    END LKObjekt_Text;
+
+    ASSOCIATION LKObjekt_LKObjektTextAssoc =
+      LKObjektRef -<#> {1} LKObjekt;
+      LKObjekt_LKObjekt_TextAssocRef -- {0 .. *} LKObjekt_Text;
+    END LKObjekt_LKObjektTextAssoc;
+
+    ASSOCIATION EigentuemerAssoc =
+      EigentuemerRef (EXTERNAL) -- {1} SIA405_Base_d_2025_draft.Administration.Organisation;
+      LKObjekt_EigentuemerAssocRef -- {0..*} LKObjekt;
+    END EigentuemerAssoc;
+
+    /** Datenträger
+     */
+    CLASS Datentraeger EXTENDS SIA405_BaseClass =
+    /** Beschreibt die Art des Datenträgers.
+     */
+    Art: MANDATORY (
+      andere,
+      CD,
+      Diskette,
+      DVD,
+      Festplatte,
+      Server,
+      Videoband
+    );
+    /** Bemerkungen zum Datenträger.
+     */
+    Bemerkung: TEXT*80;
+    Bezeichnung: MANDATORY TEXT*60;
+    /** Zugriffspfad zum Datenträger. z.B. DVD-Laufwerk -> D: , Server -> //server/videos, Harddisk -> c:/videos . Kann auch eine URL sein. Bei einem analogen Videoband leer.
+     */
+    Pfad: TEXT*100;
+    /** Ort, wo sich der Datenträger befindet.
+     */
+    Standort: TEXT*50;
+    END Datentraeger;
+
+    /** Die Klasse Datei kann eine Assoziation mit jeder Klasse des Datenmodells eingehen.
+     */
+    CLASS Datei EXTENDS SIA405_BaseClass =
+    /** Beschreibt die Art der Datei. Für analoge Videos auf Bändern ist der Typ 'Video' einzusetzen. Die Bezeichnung wird dann gleich gesetzt wie die Bezeichnung des Videobandes.
+     */
+    Art: MANDATORY (
+      andere,
+      digitales_Video,
+      Foto,
+      Panoramofilm,
+      Scan,
+      Skizze,
+      Textdatei,
+      Video
+    );
+    /** Allgemeine Bemerkungen.
+     */
+    Bemerkung: TEXT*80;
+    Bezeichnung: MANDATORY TEXT*60;
+    /** Gibt an, zu welcher Klasse des Datenmodells die Datei gehört. Grundsätzlich alle Klassen möglich. Für Fachmodelle erweitern mit den Klassen des Fachmodells.
+     */
+    Klasse: MANDATORY (
+      LKFlaeche,
+      LKLinie,
+      LKPunkt
+    );
+    /** Objekt-ID (OID) des Datensatzes zu dem die Datei gehört.
+     */
+    Objekt: MANDATORY TEXT*16;
+    /** Zusätzlicher Relativer Pfad, wo die Datei auf dem Datenträger zu finden ist. Z.B. DVD_01.
+     */
+    Relativpfad: TEXT*200;
+    END Datei;
+
+    ASSOCIATION Datei_DatentraegerAssoc =
+      DatentraegerRef  -- {1} Datentraeger;
+      Datei_DatentraegerAssocRef -- {0..*} Datei;
+    END Datei_DatentraegerAssoc;
+
+  END SIA405_LKMap;
+
+END SIA405_LKMap_d_2025_draft.
