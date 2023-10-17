@@ -154,9 +154,12 @@ MODEL SIA405_Base_d_2025_draft (de) AT "https://405.sia.ch/models/"
         /** Teil einer Bundesverwaltung (z.B. Bundesamt für Umwelt, ASTRA, Armasuisse).
          */
         Bund,
-        /** Organ der Gemeindeverwaltung.
-         */
+        /** Gemeinde gemäss Bundesamt für Statistik"
+          */
         Gemeinde,
+        /** Teil einer Gemeindeverwaltung, die eine Rolle übernimmt ((z.B. Geoinformation Stadt Bern) als Traegerschaft, Datenlieferant, etc. (aber nicht als Datenherr / (oeffentlicher) Eigentuemer)
+         */
+        Gemeindeabteilung,
         /** Genossenschaft oder Korporation: Körperschaft öffentlichen Rechts. Falls privaten Rechtes dann als Privat abbilden.
          */
         Genossenschaft_Korporation,
