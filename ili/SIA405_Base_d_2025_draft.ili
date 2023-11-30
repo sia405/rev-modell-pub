@@ -83,9 +83,6 @@ MODEL SIA405_Base_d_2025_draft (de) AT "https://405.sia.ch/models/"
       /** in_Betrieb sind Objekte, welche dem Betrieb übergeben sind und instand zu halten sind.
        */
       in_Betrieb,
-      /** konkretes Bauprojekt vorhanden oder in Ausführung (im Bau). 
-       */
-      Projekt,
       /** Objekte, welche vom Netz getrennt sind und in der Anlagenbuchhaltung abgeschrieben oder gelöscht wurden, aber sich weiterhin im Boden befinden. 
        */
       stillgelegt,
