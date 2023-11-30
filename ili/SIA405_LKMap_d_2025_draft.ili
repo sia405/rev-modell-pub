@@ -200,8 +200,36 @@ MODEL SIA405_LKMap_d_2025_draft (de) AT "https://405.sia.ch/models/"
            */
           Fernwirkkabel,
           /** Pro Haltung wird ein Objekt erzeugt. Falls mehrere Haltungen pro Kanal vorhanden sind, gibt es auch mehrere Linienobjekte, da z.B. Lichte_Hoehe oder Gefälle ändern kann.
+              Übernommen Nutzungsart_Ist aus DSS_2020_1_LV95 VERSION "18.10.2023"
+              Für primäre Abwasseranlagen gilt: Heute zulässige Nutzung. Für sekundäre Abwasseranlagen gilt: Heute tatsächliche Nutzung.
            */
-          Haltung_Kanal,
+          Haltung_Kanal (
+            /** Wasser eines Fliessgewässers, das gemäss seinem natürlichen Zustand oberflächlich, aber an einigen Orten auch in unterirdischen Leitungen abfliesst.
+             */
+            Bachwasser,
+            /** Wasser aus einem Entlastungsbauwerk, welches zum Vorfluter geführt wird. In diesen Kanal darf kein Schmutzabwasser eingeleitet werden.
+             */
+            entlastetes_Mischabwasser,
+            /** Unter Industrieabwasser werden alle Abwässer verstanden, die bei Produktions- und Verarbeitungsprozessen in der Industrie anfallen. Industrieabwässer müssen i.d.R. vorbehandelt werden, bevor sie in öffentliche Kläranlagen eingeleitet werden können (siehe Indirekteinleiter). Bei direkter Einleitung in Gewässer (siehe Direkteinleiter) ist eine umfangreiche Reinigung in speziellen werkseigenen Kläranlagen erforderlich.
+             */
+            Industrieabwasser,
+            /** 1. Mischung von Schmutz- und Regenabwasser, die gemeinsam abgeleitet werden 2. Abwasser welches aus einer Mischung von Schmutzabwasser und Regenabwasser besteht
+             */
+            Mischabwasser,
+            /** Unter Niederschlagswasser versteht man das Wasser, welches bei einem Niederschlagsereignis auf eine Oberfläche fällt. Solange es nicht abfliesst und direkt versickert, gilt es als Niederschlagswasser. Sobald es nicht direkt versickert, sondern zuerst über eine bebaute oder befestigte Fläche abfliesst, gilt es als Niederschlagsabwasser.
+             */
+            Niederschlagsabwasser,
+            /** Sicker-, Grund-, Quell- und Brunnenwasser sowie Kühlwasser aus Durchlaufkühlungen. Gemäss Gewässerschutzgesetz gilt Reinabwasser als unverschmutztes Abwasser (SN 592 000).
+             */
+            Reinabwasser,
+            /** Durch Gebrauch verändertes Wasser (häusliches, gewerbliches oder industrielles Abwasser), das in eine Entwässerungsanlage eingeleitet und einer Abwasserbehandlung zugeführt werden muss. Schmutzabwasser gilt als verschmutztes Abwasser im Sinne des Gewässerschutzgesetzes (SN 592 000)
+             */
+            Schmutzabwasser,
+            unbekannt,
+            /** andere Z.B. auch Zugang, Be- und Entlüftung, also auch weitere
+             */
+            andere
+          ),
           Schutzrohr
         ),
         Elektrizitaet (
